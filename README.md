@@ -5,6 +5,8 @@ An intelligent interview scheduling system that uses AI to automate the process 
 ![GitHub Repo stars](https://img.shields.io/github/stars/Satwik-uppada/AI-Powered-Interview-Schedular?style=for-the-badge) 
 ![GitHub last commit](https://img.shields.io/github/last-commit/Satwik-uppada/AI-Powered-Interview-Schedular?style=for-the-badge)
 ![GitHub license](https://img.shields.io/github/license/Satwik-uppada/AI-Powered-Interview-Schedular?style=for-the-badge)
+[![User Manual](https://img.shields.io/badge/User%20Manual-Here-blue?style=for-the-badge)](https://github.com/Satwik-uppada/AI-Powered-Interview-Schedular/blob/main/USERMANUAL.md)
+
 
 # Demo
 
