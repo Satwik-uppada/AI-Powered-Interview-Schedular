@@ -3,14 +3,11 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime, timezone, timedelta
 import pandas as pd
-from agno.agent import Agent
 import google.generativeai as genai
 import spacy
 import re
 from dateparser import parse
 import en_core_web_sm
-import os
-from dotenv import load_dotenv
 import urllib.parse
 
 # 📌 Google Calendar API Setup
@@ -64,9 +61,54 @@ def extract_date(text):
     
     return None
 
+def extract_working_hours(text):
+    """Extract working hours from natural language text"""
+    text = text.lower().strip()
+    
+    # Try to find time patterns like "9 am to 5 pm" or "9:00 to 17:00"
+    time_patterns = [
+        r'(\d{1,2})(?::?\d{2})?\s*(?:am|pm)?\s*(?:to|-)\s*(\d{1,2})(?::?\d{2})?\s*(?:am|pm)',
+        r'(\d{1,2})(?::?\d{2})?\s*(?:to|-)\s*(\d{1,2})(?::?\d{2})?'
+    ]
+    
+    for pattern in time_patterns:
+        match = re.search(pattern, text)
+        if match:
+            start_time, end_time = match.groups()
+            
+            # Convert to 24-hour format
+            start_hour = int(start_time)
+            end_hour = int(end_time)
+            
+            # Handle AM/PM if present
+            if 'pm' in text:
+                if end_hour != 12:
+                    end_hour += 12
+                if 'am' not in text and start_hour != 12:
+                    start_hour += 12
+            
+            # Basic validation
+            if 0 <= start_hour <= 23 and 0 <= end_hour <= 23:
+                return start_hour, end_hour
+            
+    return None
+
+def filter_slots_by_working_hours(slots, start_hour, end_hour):
+    """Filter slots to only include those within working hours"""
+    filtered_slots = []
+    for slot in slots:
+        slot_start_hour = slot['start'].hour
+        slot_end_hour = slot['end'].hour
+        
+        # Only include slots that fall within working hours
+        if start_hour <= slot_start_hour and slot_end_hour <= end_hour:
+            filtered_slots.append(slot)
+    
+    return filtered_slots
+
 # 📌 Streamlit Chat UI
 st.set_page_config(page_title="AI Interview Scheduler", layout="wide")
-st.title("🤖 SchedulAI")
+st.title("SchedulAI 🤖 ",)
 
 # Initialize session state
 if "step" not in st.session_state:
@@ -78,6 +120,7 @@ if "step" not in st.session_state:
     st.session_state.interview_duration = None
     st.session_state.free_slots = []
     st.session_state.selected_slot = None
+    st.session_state.working_hours = None  # New state variable for working hours
     st.session_state.confirmation_state = None
     st.session_state.modification_type = None
     st.session_state.previous_step = None
@@ -92,15 +135,18 @@ def get_ai_response(prompt):
         return None
 
 INITIAL_PROMPT = """
+Hi there, My name is :orange[**SchedulAI**].
+
 I am an AI Interview Scheduler assistant. I'll help you schedule interviews efficiently.
 
 **You can access [User Manual](https://github.com/Satwik-uppada/AI-Powered-Interview-Schedular/blob/main/USERMANUAL.md) here.**
 
 Please provide the following information:
 1. Your email (recruiter)
-2. Candidate's email
-3. Interview duration (e.g., '1 hour', '30 minutes')
-4. Preferred interview date
+2. Your preferred working hours
+3. Candidate's email
+4. Interview duration (e.g., '1 hour', '30 minutes')
+5. Preferred interview date
 
 I'll help you find common free time slots and schedule the interview.
 
@@ -154,20 +200,29 @@ def extract_duration(text):
     return None
 
 def split_slot_by_duration(slot_start, slot_end, duration_minutes):
-    """Split a time slot into smaller slots of given duration"""
+    """Split a time slot into smaller slots of given duration using 5-minute increments"""
     slots = []
-    current = slot_start
+    # Use 5-minute increments for more granular slot generation
+    increment_minutes = 5
     
-    # Calculate how many complete duration_minutes slots fit within the time range
-    while current + timedelta(minutes=duration_minutes) <= slot_end:
-        end_time = current + timedelta(minutes=duration_minutes)
+    # Calculate total duration of the free block in minutes
+    total_duration = int((slot_end - slot_start).total_seconds() / 60)
+    
+    # Calculate how many complete duration_minutes slots could fit with 5-min increments
+    possible_start_times = range(0, total_duration - duration_minutes + 1, increment_minutes)
+    
+    # Generate all possible slots
+    for offset in possible_start_times:
+        start_time = slot_start + timedelta(minutes=offset)
+        end_time = start_time + timedelta(minutes=duration_minutes)
+        
         # Only add slot if it fits completely within the free time block
         if end_time <= slot_end:
             slots.append({
-                "start": current,
+                "start": start_time,
                 "end": end_time
             })
-        current = end_time
+    
     return slots
 
 def convert_utc_to_ist(utc_dt):
@@ -177,11 +232,18 @@ def convert_utc_to_ist(utc_dt):
         return utc_dt
     return utc_dt.astimezone(timezone(timedelta(hours=5, minutes=30)))
 
-def get_free_slots(users, date, duration_minutes):
+def get_free_slots(users, date, duration_minutes, working_hours=None):
     # Set the day boundaries in IST directly
     ist_tz = timezone(timedelta(hours=5, minutes=30))
-    start_time_ist = datetime.combine(date, datetime.min.time()).replace(tzinfo=ist_tz)  # 00:00:00
-    end_time_ist = datetime.combine(date, datetime.max.time()).replace(tzinfo=ist_tz)    # 23:59:59
+    
+    # If working hours are specified, use them instead of full day
+    if working_hours:
+        start_hour, end_hour = working_hours
+        start_time_ist = datetime.combine(date, datetime.min.time()).replace(hour=start_hour, tzinfo=ist_tz)
+        end_time_ist = datetime.combine(date, datetime.min.time()).replace(hour=end_hour, tzinfo=ist_tz)
+    else:
+        start_time_ist = datetime.combine(date, datetime.min.time()).replace(tzinfo=ist_tz)
+        end_time_ist = datetime.combine(date, datetime.max.time()).replace(tzinfo=ist_tz)
     
     # Convert IST boundaries to UTC for API call
     start_time_utc = start_time_ist.astimezone(timezone.utc)
@@ -263,6 +325,10 @@ def get_free_slots(users, date, duration_minutes):
                 duration_slots = split_slot_by_duration(slot["start"], slot["end"], duration_minutes)
                 split_slots.extend(duration_slots)
         
+        # Filter slots by working hours if specified
+        if working_hours:
+            split_slots = filter_slots_by_working_hours(split_slots, start_hour, end_hour)
+        
         return {
             "common_free_slots": common_free_slots,
             "split_slots": split_slots
@@ -294,9 +360,18 @@ def process_user_input(user_input):
             emails = extract_emails(user_input)
             if emails:
                 st.session_state.user_email = emails[0]
-                st.session_state.step = "candidate_email"
-                return f"✅ Found your email: {emails[0]}\n\nNow, please provide the **candidate's** email."
+                st.session_state.step = "working_hours"
+                return "✅ Found your email. To help schedule interviews efficiently, please specify your preferred working hours (e.g., '9 AM to 5 PM' or '10:00 to 18:00')."
             return "I couldn't find a valid email address in your input. Please provide your email address."
+
+    elif st.session_state.step == "working_hours":
+        with st.spinner("Processing working hours..."):
+            working_hours = extract_working_hours(user_input)
+            if working_hours:
+                st.session_state.working_hours = working_hours
+                st.session_state.step = "candidate_email"
+                return f"✅ Working hours set to {working_hours[0]:02d}:00 to {working_hours[1]:02d}:00 IST.\n\nNow, please provide the **candidate's** email."
+            return "I couldn't understand the working hours format. Please specify like '9 AM to 5 PM' or '10:00 to 18:00'."
 
     elif st.session_state.step == "candidate_email":
         with st.spinner("Validating candidate email..."):
@@ -330,7 +405,8 @@ def process_user_input(user_input):
                 
                 with st.spinner("Fetching calendar availability..."):
                     users = [st.session_state.user_email, st.session_state.candidate_email]
-                    slots_result = get_free_slots(users, extracted_date, st.session_state.interview_duration)
+                    slots_result = get_free_slots(users, extracted_date, st.session_state.interview_duration, 
+                                               working_hours=st.session_state.working_hours)
                 
                 if slots_result["split_slots"]:
                     st.session_state.free_slots = slots_result["split_slots"]  # Store split slots for selection
