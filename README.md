@@ -6,6 +6,8 @@ An intelligent interview scheduling system that uses AI to automate the process 
 
 ![Image](https://github.com/user-attachments/assets/94a27616-11ed-4c9e-851f-1a2bfad8eed3)
 
+![Image](https://github.com/user-attachments/assets/e8bdf310-2485-467f-891c-813dc93d0561)
+
 ## Features ✨
 
 - **AI-Powered Scheduling**: Automatically finds common free time slots between recruiter and candidate
