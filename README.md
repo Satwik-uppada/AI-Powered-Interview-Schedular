@@ -95,11 +95,7 @@ streamlit run app.py
 ## Project Structure 📁
 
 ```
-├── app.py                 # Main Streamlit application
-├── auth.py               # Authentication handling
-├── base.py              # Base configuration and utilities
-├── Bot.py               # Bot logic implementation
-├── email_service.py     # Email service handlers
+├── Bot.py               # Bot logic and Implementation
 ├── requirements.txt     # Project dependencies
 └── credentials.json     # Google Cloud service account credentials
 ```
@@ -111,7 +107,7 @@ streamlit run app.py
 - **Authentication**: Service Account for secure access
 - **NLP**: spaCy for natural language processing
 - **AI Model**: Google's Gemini API for intelligent interactions
-- **Time Management**: dateparser for natural date parsing
+- **Date & Time Management**: dateparser for natural date parsing
 
 ## Security Considerations 🔒
 
