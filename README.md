@@ -2,6 +2,10 @@
 
 An intelligent interview scheduling system that uses AI to automate the process of finding common available time slots between recruiters and candidates using Google Calendar API.
 
+![GitHub Repo stars](https://img.shields.io/github/stars/Satwik-uppada/AI-Powered-Interview-Schedular?style=for-the-badge) 
+![GitHub last commit](https://img.shields.io/github/last-commit/Satwik-uppada/AI-Powered-Interview-Schedular?style=for-the-badge)
+![GitHub license](https://img.shields.io/github/license/Satwik-uppada/AI-Powered-Interview-Schedular?style=for-the-badge)
+
 # Demo
 
 ![Image](https://github.com/user-attachments/assets/94a27616-11ed-4c9e-851f-1a2bfad8eed3)
@@ -161,6 +165,7 @@ streamlit run app.py
 ## License 📄
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
 
 ## Support 💁
 
