@@ -6,7 +6,9 @@ An intelligent interview scheduling system that uses AI to automate the process 
 
 ![Image](https://github.com/user-attachments/assets/94a27616-11ed-4c9e-851f-1a2bfad8eed3)
 
-![Image](https://github.com/user-attachments/assets/e8bdf310-2485-467f-891c-813dc93d0561)
+
+![Image](https://github.com/user-attachments/assets/8118331f-50c9-48f2-9526-1be96a73334b). 
+
 
 ## Features ✨
 
@@ -121,6 +123,21 @@ streamlit run app.py
 - OAuth 2.0 authentication flow for secure API access
 - Separate configurations for development and production
 - Secure handling of sensitive credentials
+
+## App Galary 
+
+![image](https://github.com/user-attachments/assets/8087a4ca-e103-42da-a7e1-7dd501417482)
+
+![image](https://github.com/user-attachments/assets/847fbab0-e937-49b5-9640-e8f9efc5992d)
+
+![image](https://github.com/user-attachments/assets/77816d95-0105-4a7e-b079-f28e817480d1)
+
+![image](https://github.com/user-attachments/assets/33fefce2-6b5a-4092-931c-e6b7b6da332b)
+
+![image](https://github.com/user-attachments/assets/bcf3e873-6a2e-455a-9951-0ab7291f7eac)
+
+![image](https://github.com/user-attachments/assets/077b1d60-b568-4258-9645-64ac2f42e4cd)
+
 
 ## Contributing 🤝
 
