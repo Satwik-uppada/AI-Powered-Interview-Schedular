@@ -20,7 +20,7 @@ Before you can start using the scheduler, you need to:
 
 3. Find your calendar settings:
    - Click on the gear icon (⚙️) in the top right
-   - Select "Settings" from the dropdown menu
+   - Select "Settings & Sharing" from the dropdown menu
 
 4. Share your calendar with the service account:
    - In the left sidebar, click on your calendar name under "Settings for my calendars"
@@ -69,12 +69,12 @@ Before you can start using the scheduler, you need to:
 
    c. Specify interview duration
    ```
-   Example: "1 hour" or "45 minutes"
+   Example: "1 hour" or "45 minutes" or "1 hr 30 min"
    ```
 
    d. Enter preferred date
    ```
-   Example: "next Monday" or "March 25th"
+   Example: "next Monday" or "March 25th" or "2025-04-01"
    ```
 
 3. Select time slot:
