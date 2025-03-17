@@ -63,7 +63,7 @@ def extract_date(text):
 
 # 📌 Streamlit Chat UI
 st.set_page_config(page_title="AI Interview Scheduler", layout="wide")
-st.title("🤖 AI Powered Interview Scheduler")
+st.title("🤖 SchedulAI")
 
 # Initialize session state
 if "step" not in st.session_state:
@@ -90,6 +90,8 @@ def get_ai_response(prompt):
 
 INITIAL_PROMPT = """
 I am an AI Interview Scheduler assistant. I'll help you schedule interviews efficiently.
+
+**You can access [User Manual](https://github.com/Satwik-uppada/AI-Powered-Interview-Schedular/blob/main/USERMANUAL.md) here.**
 
 Please provide the following information:
 1. Your email (recruiter)
