@@ -17,7 +17,7 @@ credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCO
 service = build("calendar", "v3", credentials=credentials)
 
 # 📌 Configure Gemini API
-genai.configure(api_key="AIzaSyB5jpc4V6HSJrTd9fBmVksHcz-y-omXm2k")
+genai.configure(api_key="insert your google API key here")
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Load spaCy model
