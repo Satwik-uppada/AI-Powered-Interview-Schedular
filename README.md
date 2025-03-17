@@ -156,6 +156,24 @@ streamlit run app.py
 ![image](https://github.com/user-attachments/assets/d9e36bd0-377e-4f66-a594-9080297cfc93)
 
 
+
+## FAQ's
+
+![image](https://github.com/user-attachments/assets/1d236d5e-7725-441e-b345-f3cf3f79a318)
+
+Common questions and their answers:
+1. **How does the 5-minute sliding window algorithm work?**
+   - "It continuously slides through available time blocks in 5-minute increments, maximizing potential interview slots while maintaining schedule integrity."
+
+2. **How secure is the calendar integration?**
+   - "We utilize Google's OAuth 2.0 protocol and secure API endpoints for all calendar operations."
+
+3. **Can it handle multiple time zones?**
+   - "Yes, our system automatically converts all times to IST for consistency and clarity."
+
+4. **What happens if a slot becomes unavailable?**
+   - "Real-time calendar checking ensures all presented slots are currently available."
+
 ## Contributing 🤝
 
 1. Fork the repository
@@ -164,6 +182,7 @@ streamlit run app.py
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+
 ## License 📄
 
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -171,4 +190,26 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support 💁
 
-For support and queries, please open an issue in the repository.
+If you need support or have questions, please open an issue in the repository.
+
+
+---
+---
+
+## 🌐 Connect with Me  
+
+<p align="center">
+  <a href="https://www.linkedin.com/in/satwik-uppada" target="_blank">
+    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge">
+  </a>
+  <a href="mailto:uppadasatwik@gmail.com">
+    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail Badge">
+  </a>
+  <a href="https://x.com/Satwik_AI" target="_blank">
+    <img src="https://img.shields.io/badge/X-000000?style=for-the-badge&logo=Twitter&logoColor=white" alt="X Badge">
+  </a>
+  <a href="https://github.com/Satwik-uppada" target="_blank">
+    <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Badge">
+  </a>
+</p>
+
