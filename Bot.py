@@ -9,6 +9,9 @@ import spacy
 import re
 from dateparser import parse
 import en_core_web_sm
+import os
+from dotenv import load_dotenv
+import urllib.parse
 
 # 📌 Google Calendar API Setup
 SERVICE_ACCOUNT_FILE = "credentials.json"
@@ -17,7 +20,7 @@ credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCO
 service = build("calendar", "v3", credentials=credentials)
 
 # 📌 Configure Gemini API
-genai.configure(api_key="insert your google API key here")
+genai.configure(api_key="google API key")
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Load spaCy model
@@ -101,7 +104,7 @@ Please provide the following information:
 
 I'll help you find common free time slots and schedule the interview.
 
-Please provide the recruiter email to get started.
+Please provide the **Recruiter email** to get started.
 """
 
 def validate_date(date_str):
@@ -286,60 +289,66 @@ def get_user_free_slots(busy_slots, start_of_day, end_of_day):
 
 def process_user_input(user_input):
     if st.session_state.step == "initial":
-        # Extract emails from input
-        emails = extract_emails(user_input)
-        if emails:
-            st.session_state.user_email = emails[0]
-            st.session_state.step = "candidate_email"
-            return f"✅ Found your email: {emails[0]}\nNow, please provide the candidate's email."
-        return "I couldn't find a valid email address in your input. Please provide your email address."
+        with st.spinner("Validating email...", show_time=True):
+            # Extract emails from input
+            emails = extract_emails(user_input)
+            if emails:
+                st.session_state.user_email = emails[0]
+                st.session_state.step = "candidate_email"
+                return f"✅ Found your email: {emails[0]}\n\nNow, please provide the **candidate's** email."
+            return "I couldn't find a valid email address in your input. Please provide your email address."
 
     elif st.session_state.step == "candidate_email":
-        # Extract emails, excluding the recruiter's email
-        emails = [email for email in extract_emails(user_input) 
-                 if email != st.session_state.user_email]
-        if emails:
-            st.session_state.candidate_email = emails[0]
-            st.session_state.step = "interview_duration"
-            return f"✅ Found candidate's email: {emails[0]}\nHow long should the interview be? (e.g., '1 hour', '30 minutes', '45 min')"
-        return "I couldn't find a valid email address for the candidate. Please provide the candidate's email."
+        with st.spinner("Validating candidate email..."):
+            # Extract emails, excluding the recruiter's email
+            emails = [email for email in extract_emails(user_input) 
+                     if email != st.session_state.user_email]
+            if emails:
+                st.session_state.candidate_email = emails[0]
+                st.session_state.step = "interview_duration"
+                return f"✅ Found candidate's email: {emails[0]}\n\nHow long should the interview be? (e.g., '1 hour', '30 minutes', '45 min', '1 hr 30 min')"
+            return "I couldn't find a valid email address for the candidate. Please provide the candidate's email."
 
     elif st.session_state.step == "interview_duration":
-        duration_minutes = extract_duration(user_input)
-        if duration_minutes:
-            st.session_state.interview_duration = duration_minutes
-            st.session_state.step = "interview_date"
-            return f"✅ Interview duration set to {duration_minutes} minutes.\nWhat's your preferred interview date? You can use natural language like 'next Monday' or 'March 25th'."
-        return "I couldn't understand the duration. Please specify like '1 hour', '30 minutes', or '45 min'."
+        with st.spinner("Processing duration...", show_time=True):
+            duration_minutes = extract_duration(user_input)
+            if duration_minutes:
+                st.session_state.interview_duration = duration_minutes
+                st.session_state.step = "interview_date"
+                return f"✅ Interview duration set to {duration_minutes} minutes.\n\nWhat's your preferred interview date? You can use natural language like 'next Monday' or 'March 25th'."
+            return "I couldn't understand the duration. Please specify like '1 hour', '30 minutes', or '45 min', '1 hr 30 min'."
 
     elif st.session_state.step == "interview_date":
         # Extract date using NLP
-        extracted_date = extract_date(user_input)
-        if extracted_date:
-            if extracted_date < datetime.now().date():
-                return "The date you provided is in the past. Please provide a future date."
-            
-            st.session_state.interview_date = extracted_date
-            users = [st.session_state.user_email, st.session_state.candidate_email]
-            slots_result = get_free_slots(users, extracted_date, st.session_state.interview_duration)
-            
-            if slots_result["split_slots"]:
-                st.session_state.free_slots = slots_result["split_slots"]  # Store split slots for selection
+        with st.spinner("Analyzing date...", show_time=True):
+            extracted_date = extract_date(user_input)
+            if extracted_date:
+                if extracted_date < datetime.now().date():
+                    return "The date you provided is in the past. Please provide a future date."
                 
-                # Format common free time blocks with full date-time for clarity
-                common_slots_text = "\n".join([
-                    f"📆 {slot['start'].strftime('%H:%M')} to {slot['end'].strftime('%H:%M')}" 
-                    for slot in slots_result["common_free_slots"]
-                ])
+                st.session_state.interview_date = extracted_date
                 
-                # Format split slots with numbers for selection, showing only time for clarity
-                split_slots_text = "\n".join([
-                    f"{i+1}. {slot['start'].strftime('%H:%M')} to {slot['end'].strftime('%H:%M')}" 
-                    for i, slot in enumerate(slots_result["split_slots"])
-                ])
+                with st.spinner("Fetching calendar availability..."):
+                    users = [st.session_state.user_email, st.session_state.candidate_email]
+                    slots_result = get_free_slots(users, extracted_date, st.session_state.interview_duration)
                 
-                st.session_state.step = "select_slot"
-                return f"""✅ Available time slots for {extracted_date.strftime('%A, %B %d, %Y')}:
+                if slots_result["split_slots"]:
+                    st.session_state.free_slots = slots_result["split_slots"]  # Store split slots for selection
+                    
+                    # Format common free time blocks with full date-time for clarity
+                    common_slots_text = "\n".join([
+                        f"📆 {slot['start'].strftime('%H:%M')} to {slot['end'].strftime('%H:%M')}" 
+                        for slot in slots_result["common_free_slots"]
+                    ])
+                    
+                    # Format split slots with numbers for selection, showing only time for clarity
+                    split_slots_text = "\n".join([
+                        f"{i+1}. {slot['start'].strftime('%H:%M')} to {slot['end'].strftime('%H:%M')}" 
+                        for i, slot in enumerate(slots_result["split_slots"])
+                    ])
+                    
+                    st.session_state.step = "select_slot"
+                    return f"""✅ Available time slots for {extracted_date.strftime('%A, %B %d, %Y')}:
 
 Common Free Time Blocks (IST):
 {common_slots_text}
@@ -348,8 +357,8 @@ Available {st.session_state.interview_duration}-minute Interview Slots (Select f
 {split_slots_text}
 
 Please select an interview slot by entering its number (1-{len(slots_result["split_slots"])})."""
-            return f"No common free slots found for {extracted_date.strftime('%A, %B %d')} with duration of {st.session_state.interview_duration} minutes. Please try another date."
-        return "I couldn't understand the date. Please provide a date like 'next Monday' or 'March 25th'."
+                return f"**No common free slots** found for {extracted_date.strftime('%A, %B %d')} with duration of **{st.session_state.interview_duration} minutes**. Please try **another date**."
+            return "I couldn't understand the date. Please provide a date like **'next Monday' or 'March 25th'**."
 
     elif st.session_state.step == "select_slot":
         try:
@@ -372,9 +381,9 @@ Please select an interview slot by entering its number (1-{len(slots_result["spl
 Would you like to proceed with scheduling this interview?
 """
                 return confirmation
-            return "Invalid slot number. Please select a valid number from the list."
+            return "**Invalid slot number**. Please select a **valid number** from the list."
         except ValueError:
-            return "Please enter a valid number to select a time slot."
+            return "Please enter a **valid number** to select a time slot."
 
     elif st.session_state.step == "modification_choice":
         if user_input.lower() == "recruiter email":
@@ -389,9 +398,70 @@ Would you like to proceed with scheduling this interview?
             return "Please provide the new candidate email."
         else:
             st.session_state.step = "interview_date"
-            return "What's your preferred interview date? You can use natural language like 'next Monday' or 'March 25th'."
+            return "What's your preferred interview date? You can use natural language like **'next Monday' or 'March 25th'**."
 
-    return "I don't understand. Please follow the instructions."
+    return "***I don't understand. Please follow the instructions.***"
+
+def generate_email_template(event_details, sharing_link):
+    """Generate a professional email template using Gemini AI"""
+    try:
+        prompt = f"""
+        Generate a professional and friendly email template for an interview invitation with these details:
+        - Date: {event_details['date']}
+        - Time: {event_details['time']}
+        - Duration: {event_details['duration']} minutes
+        - Recruiter: {event_details['recruiter']}
+        - Calendar Link: {sharing_link}
+        
+        The email should:
+        1. Be professional but warm
+        2. Include all scheduling details clearly
+        3. Have clear instructions to click the calendar link to accept the interview invite
+        4. Request the candidate to confirm receipt of the email
+        5. Mention the importance of being on time
+        6. Be concise but complete
+        7. Include the calendar link with instructions on how to add it to their calendar
+        8. Dont use any placeholder any where. Use the actual details provided above. start with dear candidate. No need to specify name.
+        9. Don't include subject line.
+        10. Best regrads should be with the recruiter email.
+        11. Ask the candidate to click on the link or copy and paste it in the browser to add the event to their calendar.
+        12. follow the above pattern to generate the email.
+        
+        Format the email with proper line breaks and spacing for readability.
+        """
+        subject = f"Interview Scheduled: {event_details['date']}"
+        response = model.generate_content(prompt)
+        email_body = response.text
+        
+        # Create mailto link with the generated content
+        
+        encoded_body = urllib.parse.quote(email_body)
+        mailto_link =f'https://mail.google.com/mail/?view=cm&fs=1&to={st.session_state.candidate_email}&su={urllib.parse.quote(subject)}&body={encoded_body}'
+    
+        
+        return mailto_link
+    except Exception as e:
+        default_email = f"""Dear Candidate,
+
+Thank you for your interest in our organization. We are pleased to schedule your interview:
+
+Date: {event_details['date']}
+Time: {event_details['time']} IST
+Duration: {event_details['duration']} minutes
+
+To add this event to your calendar, please click the following link:
+{sharing_link}
+
+Please confirm receipt of this email and the calendar invitation.
+
+Best regards,
+{event_details['recruiter']}"""
+        
+        subject = f"Interview Scheduled: {event_details['date']}"
+        encoded_body = urllib.parse.quote(default_email)
+        mailto_link = f'https://mail.google.com/mail/?view=cm&fs=1&to={st.session_state.candidate_email}&su={urllib.parse.quote(subject)}&body={encoded_body}'
+        
+        return mailto_link
 
 # Intial prompt of the BOT
 if len(st.session_state.messages) == 0:
@@ -420,66 +490,76 @@ if st.session_state.step == "confirm_scheduling":
     with col1:
         if st.button("✅ Confirm and Schedule"):
             # Add button click to chat history
-            st.session_state.messages.append({"role": "user", "content": "Confirm and Schedule"})
-            
-            selected_slot = st.session_state.selected_slot
-            
-            try:
-                # Ensure datetimes are in UTC for Google Calendar API
-                start_utc = selected_slot["start"].astimezone(timezone.utc)
-                end_utc = selected_slot["end"].astimezone(timezone.utc)
+            with st.spinner("Scheduling interview...", show_time=True):
+                st.session_state.messages.append({"role": "user", "content": "Confirm and Schedule"})
                 
-                # Create calendar event without attendees first
-                event = {
-                    "summary": "Interview Meeting",
-                    "description": f"""Interview scheduled by AI Interview Scheduler.
+                selected_slot = st.session_state.selected_slot
+                
+                try:
+                    # Ensure datetimes are in UTC for Google Calendar API
+                    start_utc = selected_slot["start"].astimezone(timezone.utc)
+                    end_utc = selected_slot["end"].astimezone(timezone.utc)
+                    
+                    # Create calendar event without attendees first
+                    event = {
+                        "summary": "Interview Meeting",
+                        "description": f"""Interview scheduled by AI Interview Scheduler.
 
-Recruiter: {st.session_state.user_email}
-Candidate: {st.session_state.candidate_email}
-Duration: {st.session_state.interview_duration} minutes""",
-                    "start": {
-                        "dateTime": start_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "timeZone": "UTC"
-                    },
-                    "end": {
-                        "dateTime": end_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "timeZone": "UTC"
+                                            Recruiter: {st.session_state.user_email}
+                                            Candidate: {st.session_state.candidate_email}
+                                            Duration: {st.session_state.interview_duration} minutes""",
+                        "start": {
+                            "dateTime": start_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                            "timeZone": "UTC"
+                        },
+                        "end": {
+                            "dateTime": end_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                            "timeZone": "UTC"
+                        }
                     }
-                }
-                
-                # Use the recruiter's email as the calendar ID
-                event_result = service.events().insert(
-                    calendarId=st.session_state.user_email,  # Use recruiter's email as calendar ID
-                    body=event,
-                    sendUpdates="none"
-                ).execute()
-                
-                event_id = event_result.get('id')
-                html_link = event_result.get('htmlLink', '')
-                
-                # Generate the sharing link with proper encoding
-                start_time = start_utc.strftime("%Y%m%dT%H%M%SZ")
-                end_time = end_utc.strftime("%Y%m%dT%H%M%SZ")
-                
-                # URL encode the parameters
-                event_title = "Interview+Meeting"
-                description = f"Interview+with+{st.session_state.candidate_email}"
-                sharing_link = (
-                    "https://calendar.google.com/calendar/render?"
-                    f"action=TEMPLATE&"
-                    f"text={event_title}&"
-                    f"dates={start_time}/{end_time}&"
-                    f"details={description}&"
-                    "location=&"
-                    "trp=false&"
-                    "pli=1&"
-                    "sf=true&"
-                    "output=xml"
-                )
-                
-                confirmation_message = f"""✅ Interview has been scheduled successfully!
+                    
+                    # Use the recruiter's email as the calendar ID
+                    event_result = service.events().insert(
+                        calendarId=st.session_state.user_email,  # Use recruiter's email as calendar ID
+                        body=event,
+                        sendUpdates="none"
+                    ).execute()
+                    
+                    event_id = event_result.get('id')
+                    html_link = event_result.get('htmlLink', '')
+                    
+                    # Generate the sharing link with proper encoding
+                    start_time = start_utc.strftime("%Y%m%dT%H%M%SZ")
+                    end_time = end_utc.strftime("%Y%m%dT%H%M%SZ")
+                    
+                    # URL encode the parameters
+                    event_title = "Interview+Meeting"
+                    description = f"Interview+with+{st.session_state.candidate_email}"
+                    sharing_link = (
+                        "https://calendar.google.com/calendar/render?"
+                        f"action=TEMPLATE&"
+                        f"text={event_title}&"
+                        f"dates={start_time}/{end_time}&"
+                        f"details={description}&"
+                        "location=&"
+                        "trp=false&"
+                        "pli=1&"
+                        "sf=true&"
+                        "output=xml"
+                    )
+                    
+                    # Prepare event details for Gemini
+                    event_details = {
+                        "date": st.session_state.interview_date.strftime('%A, %B %d, %Y'),
+                        "time": f"{selected_slot['start'].strftime('%H:%M')} to {selected_slot['end'].strftime('%H:%M')} IST",
+                        "duration": st.session_state.interview_duration,
+                        "recruiter": st.session_state.user_email
+                    }
 
-Since we're using a service account, you'll need to manually invite the candidate using the sharing link below.
+                    # Generate email template with sharing link
+                    mailto_link = generate_email_template(event_details, sharing_link)
+
+                    confirmation_message = f"""✅ Interview has been scheduled successfully!
 
 Event Details:
 - Date: {st.session_state.interview_date.strftime('%A, %B %d, %Y')}
@@ -487,39 +567,35 @@ Event Details:
 - Duration: {st.session_state.interview_duration} minutes
 - Recruiter: {st.session_state.user_email}
 - Candidate: {st.session_state.candidate_email}
+- Customize and share manually: [Google Calendar Event]({html_link})
 
-To invite the candidate:
-1. Use this Google Calendar sharing link:
-{sharing_link}
+You can share the calendar event with the candidate using this link: [Send it]({mailto_link})
 
-2. Or view and share the event from your calendar:
-{html_link}
+### :green[**The event has been added to your calendar.**]"""
 
-The event has been added to your calendar. You can forward the calendar invite to {st.session_state.candidate_email} from there."""
-                                    
-                st.session_state.messages.append({"role": "assistant", "content": confirmation_message})
-                st.session_state.step = "done"
-                st.rerun()
-                
-            except Exception as e:
-                error_message = str(e)
-                st.error(f"Error creating calendar event: {error_message}")
-                if "403" in error_message:
-                    st.error(f"""
-                        Calendar access error. Please check:
-                        1. You've shared your calendar ({st.session_state.user_email}) with: calendar-scheduler-bot@scheduling-bot-453903.iam.gserviceaccount.com
-                        2. The service account has "Make changes and manage sharing" permissions
-                        3. Try removing and re-adding the sharing permissions
-                        """)
-                elif "404" in error_message:
-                    st.error(f"""
-                        Calendar not found error. This means:
-                        1. The service account cannot access the calendar for {st.session_state.user_email}
-                        2. Please make sure you've shared your calendar with the service account email
-                        """)
-                else:
-                    st.error("Please make sure you've shared your calendar with the service account email: calendar-scheduler-bot@scheduling-bot-453903.iam.gserviceaccount.com")
-    
+                    st.session_state.messages.append({"role": "assistant", "content": confirmation_message})
+                    st.session_state.step = "done"
+                    st.rerun()
+                    
+                except Exception as e:
+                    error_message = str(e)
+                    st.error(f"Error creating calendar event: {error_message}")
+                    if "403" in error_message:
+                        st.error(f"""
+                            Calendar access error. Please check:
+                            1. You've shared your calendar ({st.session_state.user_email}) with: calendar-scheduler-bot@scheduling-bot-453903.iam.gserviceaccount.com
+                            2. The service account has "Make changes and manage sharing" permissions
+                            3. Try removing and re-adding the sharing permissions
+                            """)
+                    elif "404" in error_message:
+                        st.error(f"""
+                            Calendar not found error. This means:
+                            1. The service account cannot access the calendar for {st.session_state.user_email}
+                            2. Please make sure you've shared your calendar with the service account email
+                            """)
+                    else:
+                        st.error("Please make sure you've shared your calendar with the service account email: calendar-scheduler-bot@scheduling-bot-453903.iam.gserviceaccount.com")
+        
     with col2:
         if st.button("🔄 Change Date/Time"):
             # Add button click to chat history
