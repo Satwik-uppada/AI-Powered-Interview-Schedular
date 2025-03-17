@@ -82,20 +82,7 @@ Before you can start using the scheduler, you need to:
    - Choose a slot by entering its number
    - Confirm the selection
    
-## Email Templates
-The bot now supports automatic email template generation for common scheduling scenarios:
-- Meeting invitations
-- Rescheduling requests
-- Cancellation notices
-- Follow-up communications
-
-To use the email template feature:
-1. Select the template type when prompted
-2. Provide the required information
-3. Review and customize the generated template
-4. Send or copy the formatted email
-
-## Quick Email Links
+### Quick Email Links
 The bot generates direct email composition links that:
 - Pre-fill recipient email addresses
 - Include subject lines
