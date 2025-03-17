@@ -18,6 +18,8 @@ An intelligent interview scheduling system that uses AI to automate the process 
 - **Interactive UI**: Built with Streamlit for a user-friendly experience
 - **Timezone Support**: Handles time slots in IST (Indian Standard Time)
 - **Service Account Integration**: Uses Google Cloud service account for secure calendar access
+- **Custom Email Template Generation**: Smart email template generation with customizable content
+- **Email Automation**: Direct email composition links for quick responses
 
 ## Prerequisites 📋
 
