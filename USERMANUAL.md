@@ -81,6 +81,31 @@ Before you can start using the scheduler, you need to:
    - View available time slots
    - Choose a slot by entering its number
    - Confirm the selection
+   
+## Email Templates
+The bot now supports automatic email template generation for common scheduling scenarios:
+- Meeting invitations
+- Rescheduling requests
+- Cancellation notices
+- Follow-up communications
+
+To use the email template feature:
+1. Select the template type when prompted
+2. Provide the required information
+3. Review and customize the generated template
+4. Send or copy the formatted email
+
+## Quick Email Links
+The bot generates direct email composition links that:
+- Pre-fill recipient email addresses
+- Include subject lines
+- Add formatted message bodies
+- Support multiple recipients
+
+To use quick email links:
+1. Click the generated hyperlink
+2. Your default email client will open
+3. Review and send the pre-formatted message
 
 ## Troubleshooting Guide 🔧
 
@@ -132,6 +157,18 @@ If you encounter issues:
 2. Verify all setup steps are completed
 3. Contact your system administrator
 4. Raise an issue in the project repository
+
+## System Administrator Guide 🛡️
+
+If you're setting up this system for your organization:
+
+1. Ensure the service account is properly configured
+2. Set up the Gemini API key:
+   - Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Add it to the environment variables or .env file
+   - Keep the API key secure and never share it
+3. Monitor API usage and quotas
+4. Regularly review and update access permissions
 
 ## Quick Reference Card 📝
 
