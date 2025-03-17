@@ -140,6 +140,14 @@ streamlit run app.py
 
 ![image](https://github.com/user-attachments/assets/077b1d60-b568-4258-9645-64ac2f42e4cd)
 
+![calendar](https://github.com/user-attachments/assets/e70157d3-6a24-4b54-84ac-e22cd002de24)
+
+![image](https://github.com/user-attachments/assets/4a1cae6e-864f-4a91-821d-5f66d1fdad75)
+
+![image](https://github.com/user-attachments/assets/7210ece7-a0b8-44f5-83cd-1280dadd82d3)
+
+![image](https://github.com/user-attachments/assets/d9e36bd0-377e-4f66-a594-9080297cfc93)
+
 
 ## Contributing 🤝
 
