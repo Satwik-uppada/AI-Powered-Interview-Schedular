@@ -2,6 +2,10 @@
 
 An intelligent interview scheduling system that uses AI to automate the process of finding common available time slots between recruiters and candidates using Google Calendar API.
 
+# Demo
+
+![Image](https://github.com/user-attachments/assets/94a27616-11ed-4c9e-851f-1a2bfad8eed3)
+
 ## Features ✨
 
 - **AI-Powered Scheduling**: Automatically finds common free time slots between recruiter and candidate
