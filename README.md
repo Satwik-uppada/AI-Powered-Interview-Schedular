@@ -9,6 +9,7 @@ An intelligent interview scheduling system that uses AI to automate the process 
 
 ![Image](https://github.com/user-attachments/assets/8118331f-50c9-48f2-9526-1be96a73334b). 
 
+[![View Presentation File](https://img.shields.io/badge/View-Presentation-blue?style=for-the-badge)](https://github.com/Satwik-uppada/AI-Powered-Interview-Schedular/blob/main/PPT.md)
 
 ## Features ✨
 
