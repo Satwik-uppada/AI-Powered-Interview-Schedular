@@ -12,7 +12,7 @@ Before you can start using the scheduler, you need to:
 
 ## Calendar Permission Setup 🔐
 
-### Step 1: Add Service Account to Your Calendar
+### Step 1: Add Service Account to Your Calendar(Only for Recruiters)
 
 1. Copy the service account email: `calendar-scheduler-bot@scheduling-bot-453903.iam.gserviceaccount.com`
 
@@ -29,12 +29,20 @@ Before you can start using the scheduler, you need to:
    - Paste the service account email
    - Set permission to "Make changes and manage sharing"
    - Click "Send"
+   - 
 
-### Step 2: Calendar Visibility Settings
+
+### Step 2: Calendar Visibility Settings (Both Candidates and Recruiters)
 
 1. Still in calendar settings, ensure:
    - "Make available to public" is OFF for privacy
    - "See all event details" is selected under "Access permissions"
+
+#### Recruiters Settings
+![image](https://github.com/user-attachments/assets/46542dca-c0b4-4a39-b462-50f9c90ba1a8)
+
+#### Candidate Settings
+![image](https://github.com/user-attachments/assets/6d78b161-10eb-4e67-a356-cd31e2324e06)
 
 ## Using the Scheduler 📋
 
